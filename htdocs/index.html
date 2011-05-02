@@ -36,14 +36,14 @@
     var startPos = { coords:{ latitude: 52.529	,
                               longitude: 13.4687930
                    }};
+    var geolocOptions = {enableHighAccuracy:true, maximumAge:500};
     $('.error_type').hide();
     $('#error').hide();
     
     function showPosition( position ) {
-        var lat = position.coords.latitude;
-        var lon = position.coords.longitude;
-        $('#currentLat').text( lat );
-        $('#currentLon').text( lon );
+        $('#currentLat').text( position.coords.latitude );
+        $('#currentLon').text( position.coords.longitude );
+        $('#currentError').text( position.coords.accuracy );
     }
 
     function formatDistance( distance ) {
@@ -67,7 +67,7 @@
         //   1: permission denied
         //   2: position unavailable (error response from locaton provider)
         //   3: timed out
-      });
+      },geolocOptions);
  
       navigator.geolocation.watchPosition(function(position) {
           showPosition( position );
@@ -75,7 +75,7 @@
           calculateDistance(startPos.coords.latitude, startPos.coords.longitude,
                             position.coords.latitude, position.coords.longitude) )
         );
-      });
+      },function(){},geolocOptions);
     }
   });
  
@@ -109,7 +109,7 @@
   <div id="distance" class="bignumber">
   </div>
   <div id="position" class="smallnumber">
-    <span id="currentLat">???</span> - <span id="currentLon">???</span>
+    <span id="currentLat">???</span> - <span id="currentLon">???</span> +-<span id="currentError">???</span>m
   </div>
 </body>
 </html>
