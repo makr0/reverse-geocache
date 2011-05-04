@@ -9,45 +9,51 @@
     <body>
         <script>
  
+            var positions;
+            var currentTarget;
+            var currentPosIndex = -1;
+            var currentPosition = 0;
+            var geolocOptions = {enableHighAccuracy:true, maximumAge:500};
             $(function() {
  
-                var startPos_fixed = { coords:{ latitude: 52.528038	,
-                                               longitude: 13.440569
-                    }};
-                var startPos = false;
-                var geolocOptions = {enableHighAccuracy:true, maximumAge:500};
                 $('.error_type').hide();
                 $('#error').hide();
+                $('#endgame').hide();
                
-                $.getJSON('lastpos.php')
+                $.getJSON('positions.php')
                  .success(function(data){
-                               startPos = { coords: data.coords };
+                               positions = data ;
+                               setNextTarget();
                                startTracking();
                           })
                  .error(function(){ 
                      $('#error').show(); 
                      $('#error .error_type_0').show();
                  });
-    
-                function showPosition( position ) {
-                    $('#currentLat').text( position.coords.latitude );
-                    $('#currentLon').text( position.coords.longitude );
-                    $('#currentErrorValue').text( position.coords.accuracy );
-                }
+            });
+            
+            function showPosition( position ) {
+                $('#currentLat').text( position.coords.latitude );
+                $('#currentLon').text( position.coords.longitude );
+                $('#currentErrorValue').text( position.coords.accuracy );
+            }
 
-                function formatDistance( distance ) {
-                    var unit = "m";
-                    if( distance > 1000 ) {
-                        distance /= 1000;
-                        unit = "km";
-                    }
-                    var num=Math.pow(10,2);
-                    return (Math.round(distance*num)/num)+' '+unit;
+            function formatDistance( distance ) {
+                var unit = "m";
+                if( distance > 1000 ) {
+                    distance /= 1000;
+                    unit = "km";
                 }
-                function startTracking() {
+                var num=Math.pow(10,2);
+                return (Math.round(distance*num)/num)+' '+unit;
+            }
+
+            function startTracking() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
+                        currentPosition = position;
                         showPosition( position );
+                        showDistance( currentTarget, position );
                     }, function(error) {
                         $('#error').show();
                         $('#error .error_type_'+error.code).show();
@@ -57,18 +63,48 @@
                         //   2: position unavailable (error response from locaton provider)
                         //   3: timed out
                     },geolocOptions);
- 
+
                     navigator.geolocation.watchPosition(function(position) {
+                        currentPosition = position;
                         showPosition( position );
-                        $('#distance').text ( formatDistance(
-                        calculateDistance(startPos.coords.latitude, startPos.coords.longitude,
-                        position.coords.latitude, position.coords.longitude) )
-                    );
+                        showDistance( currentTarget, position );
                     },function(){},geolocOptions);
                 }
+            }
+
+            function showDistance( target, position) {
+                var currentDistance = calculateDistance(
+                            target.coords.latitude, target.coords.longitude,
+                            position.coords.latitude, position.coords.longitude
+                );
+                if( currentDistance < 5 ) {
+                    setNextTarget();
                 }
-            });
- 
+
+                $('#distance').text (
+                    formatDistance( currentDistance )
+                );
+            }
+            function setNextTarget() {
+                currentPosIndex += 1;
+                $('#posIndex').text( currentPosIndex + 1);
+                if( currentPosIndex > positions.length/3) {
+                    $('#lastIndex').text( positions.length ); 
+                }
+                if( positions.length <= currentPosIndex ) {
+                    endGame();
+                } else {
+                    currentTarget = positions[currentPosIndex];
+                    if( currentPosition !== 0 ) {
+                        showDistance( currentTarget, currentPosition );
+                    }
+                    
+                }
+            } 
+            function endGame() {
+                $('#runninggame').add('#indexDisplay').hide();
+                $('#endgame').show(1000);
+            }
             // Reused code - copyright Moveable Type Scripts - retrieved May 4, 2010.
             // http://www.movable-type.co.uk/scripts/latlong.html
             // Under Creative Commons License http://creativecommons.org/licenses/by/3.0/
@@ -97,12 +133,23 @@
         </div>
 
 
-        <div id="distance" class="bignumber">??? km
+        <div id="indexDisplay" class="normaltext header">
+            Entfernung Ziel <div id="posIndex" class="inline" >?</div> von <div id="lastIndex" class="inline" >?</div>
+            <!-- <a onClick="setNextTarget();">next</a> -->
         </div>
 
-        <div id="currentError" class="mediumnumber">
-            +- <span id="currentErrorValue">???</span>m
+        <div id="runninggame" class="displaybody">
+            <div id="distance" class="bignumber">??? km</div>
+            <div id="currentError" class="mediumnumber">
+                +- <span id="currentErrorValue">???</span>m
+            </div>
         </div>
+        
+        <div id="endgame" class="displaybody">
+            <img src="trollface.gif">
+        </div>
+        
+        
         <div id="position" class="footer smallnumber">
             <span id="currentLat">???</span> - <span id="currentLon">???</span> 
         </div>

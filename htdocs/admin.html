@@ -9,40 +9,84 @@
     <body>
         <script>
  
+            var positions;
+            var protect = true;
+            var currentIndex = 0;
+            var geolocOptions = {enableHighAccuracy:true, maximumAge:500};
             $(function() {
- 
-                var startPos;
-                var savedPos;
-                var geolocOptions = {enableHighAccuracy:true, maximumAge:500};
+                $('#positions').click(function(evt){
+                    currentIndex=$(evt.target).data('index');
+                    protect = false;
+
+                    showPositions();
+                });
                 $('.error_type').hide();
                 $('#error').hide();
+                $('#clearbtn').click(function(){
+                    currentIndex = 0;
+                    positions = [];
+                    showPositions();
+                });
                 $('#savebtn').click(function(){
                     $('#savebtn').text('saving...');
-                    $.post('/save.php',startPos)
-                     .success(function(data){
+                    $.post('/save.php',{positions:positions})
+                    .success(function(data){
                         $('#savebtn').text('...done');
-                        savedPos=data;
-                     })
-                     .error(function(){
+                        currentIndex++;
+                    })
+                    .error(function(){
                         $('#savebtn').text('...error');
-                     })
-                     .complete(function(){
+                    })
+                    .complete(function(){
                         window.setTimeout(function(){
                             $('#savebtn').text('save');
                         },3000)
-                     });
                     });
+                });
+                $.getJSON('positions.php')
+                .success(function(data){
+                    positions = data ;
+                    if(!$.isArray(positions)) {
+                        positions = [];
+                    }
+                    showPositions();
+                    startTracking();
+                })
+                .error(function(){ 
+                    $('#error').show(); 
+                    $('#error .error_type_0').show();
+                });
+                
     
-                function showPosition( position ) {
-                    $('#currentLat').text( position.coords.latitude );
-                    $('#currentLon').text( position.coords.longitude );
-                    $('#currentErrorValue').text( position.coords.accuracy );
-                    startPos=position;
+            });
+            function showPositions( currentPosition ) {
+                if( currentPosition != undefined && !protect) {
+                    positions[currentIndex]=currentPosition;
+                    $('#currentErrorValue').text( currentPosition.coords.accuracy );
                 }
-
+                var $html = $('<ul></ul>');
+                var item;
+                $.each(positions,function(index,position){
+                    item = $('<li>'+ 
+                        position.coords.latitude +';'+
+                        position.coords.longitude+':'+
+                        position.coords.accuracy+
+                        '</li>');
+                    item.data('index',index);
+                    if( index == currentIndex &&!protect ) {
+                        item.addClass('active');
+                    }
+                    $html.append(item);
+                });
+                item = $('<li><span class="btn">new</span></li>');
+                item.data('index',positions.length);
+                $html.append(item);
+                $('#positions').empty().append($html);
+            }
+            function startTracking() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
-                        showPosition( position );
+                        showPositions( position );
                     }, function(error) {
                         $('#error').show();
                         // $('#functions').hide();
@@ -55,10 +99,10 @@
                     },geolocOptions);
  
                     navigator.geolocation.watchPosition(function(position) {
-                        showPosition( position );
+                        showPositions( position );
                     },function(){},geolocOptions);
                 }
-            });
+            }
  
         </script>
         <div id="error" style="display:none">
@@ -71,12 +115,13 @@
 
         <div id="functions">
             <div id="savebtn" class="btn">save</div>
+            <div id="clearbtn" class="btn">clear</div>
 
-            <div id="position" class=" mediumnumber lightnumber">
-                <span id="currentLat">???</span> - <span id="currentLon">???</span>
+            <div id="positions" class="normaltext leftalign">
             </div>
-            <div id="currentError" class="bignumber">
+            <div id="currentError" class="bignumber footer leftalign">
                 +- <span id="currentErrorValue" >???</span>m
+                <a href="/" class="right normaltext">mainApp</a>
             </div>
         </div>
     </body>

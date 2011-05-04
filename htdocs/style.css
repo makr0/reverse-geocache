@@ -11,7 +11,7 @@
             }
             a { text-decoration: underline; cursor: pointer; }
             .bignumber{
-                font-size: 42px;
+                font-size: 50px;
                 font-weight: bold;
                 color: #fff;
                 text-shadow: 0 1px 4px rgba(0, 0, 0, 0.68);
@@ -25,14 +25,47 @@
                 font-size: 18px;
                 text-shadow: 0 1px 1px rgba(255, 255, 255, 0.33);
             }
+            
+            .normaltext {
+                color : #fff;
+                font-size: 18px;
+            }
+            
+            .inline {
+                display: inline;
+            }
+            .leftalign {
+                text-align: left;
+            }
+            .right {
+                right: 0;
+                position: absolute;
+                bottom:0;
+            }
+            
+            .active {
+                background: #000;
+            }
             .lightnumber { color: #fff }
             #distance {
                 padding-top: 20px;
             }
 
+            .header {
+                position: fixed;
+                top:10px;
+                width: 100%;
+            }
             .footer {
-                position: absolute;
+                position: fixed;
                 bottom:10px;
+                width: 100%;
+            }
+            
+            .displaybody {
+                position: absolute;
+                top:30%;
+                width: 100%;
             }
 
 
